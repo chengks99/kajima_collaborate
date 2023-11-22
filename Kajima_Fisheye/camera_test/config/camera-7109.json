@@ -1,0 +1,28 @@
+{
+    "model_path": {
+        "pd_model" : "./storage/models/yolox/cpset8_pa150dyn1024_e20_ckpt_9636.pth",
+        "pr_model" : "./storage/models/yolox/Body/model_mem_test_jk",
+        "kp_model" : "./storage/models/yolox/retrain_keypoint.pth.tar",
+        "kp_cfg" : "./storage/models/yolox/256x192_d256x3_adam_lr1e-3.yaml",
+        "cloth_model" : "./storage/models/thermalComfort/gn20.pth",
+        "pmv_model" : "./storage/models/thermalComfort/XGBRegr_10k-9_10k-6.json"
+    },
+    "body_model_info": {
+        "emb_layer_name" : "fc1_output",
+        "device" : 0,
+        "pd_det_threshold" : 0.5,
+        "pd_nms_threshold" : 0.45,
+        "pd_input_resize" : 1600,
+        "max_detected_person" : 0,
+        "min_person_width" : 70,
+        "pr_threshold" : 0.5,
+        "body_database" : "./storage/lookup/database_dome_body_front_only_personal.pkl"
+    },
+    "pmv_model_info": {
+        "air_speed" : 0.1,
+        "room_temp" : 22.6,
+        "radiant_temp" : 22.6,
+        "rel_humidity" : 57.8
+    },
+    "cam_roi" : [580,1120,1336,884,2016,956,2176,1960,900,2404,612,2252]       
+}

@@ -1,0 +1,6 @@
+{
+    "camera_width": 2992,
+    "camera_height": 2992,
+    "camera_fps": 10,
+    "camera_source" : "rtsp://Admin:Welcome123@192.168.0.21/MediaInput/h264/Stream_1"
+}

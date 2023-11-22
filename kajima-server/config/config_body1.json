@@ -1,0 +1,16 @@
+{
+    "pd_model": "./storage/models/pL1_MWHB1024_Mar11_4000.ckpt",
+    "pr_model": "./storage/models/Body/model_mem_test_jk",
+    "kp_model": "./storage/models/retrain_keypoint.pth.tar",
+    "kp_cfg": "./storage/models/256x192_d256x3_adam_lr1e-3.yaml",
+    "emb_layer_name": "fc1_output",
+    "device": 0,
+    "pd_det_threshold": 0.5,
+    "pd_nms_threshold": 0.45,
+    "pd_input_resize": 1280,
+    "max_detected_persons": 0,
+    "min_person_width": 70,
+    "pr_threshold": 0.5,
+    "body_database": "/home/jk/Desktop/KajimaJune2021/test_joe/FishEye_queue_fast_release_conf/Results/body_database.pkl",
+    "fisheye": 1
+}

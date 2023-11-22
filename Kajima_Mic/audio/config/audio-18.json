@@ -1,0 +1,9 @@
+{
+    "fs": 16000,
+    "window_asl": 1,
+    "record_duration": 1,
+    "vad_level": 2,
+    "num_source": 1,
+    "num_classes": 3,
+    "channel": 7
+}

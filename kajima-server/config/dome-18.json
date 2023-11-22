@@ -1,0 +1,44 @@
+{
+    "model_path": {
+        "pd_model": "./models/yolox_l_person_aug.pth",
+        "pr_model": "./models/Body/model_mem_test_jk",
+        "fr_model": "./models/Face/r100_glint360K_mxnet_fc_01/model",
+        "kp_model": "./models/pose_resnet_50_256x192.pth.tar",
+        "kp_cfg": "./models/256x192_d256x3_adam_lr1e-3.yaml",
+        "cloth_model": "./ThermalComfort/models/gn20.pth",
+        "pmv_model": "./ThermalComfort/models/XGBRegr_10k-9_10k-6.json"
+    },
+    "face_model_info": {
+        "fr_threshold": 0.4,
+        "face_database": "../CommonDB/Face_Database_04102022.pkl"
+    },
+    "body_model_info": {
+        "emb_layer_name": "fc1_output",
+        "device": 0,
+        "pd_det_threshold": 0.5,
+        "pd_nms_threshold": 0.45,
+        "pd_input_resize": 1280,
+        "max_detected_person": 0,
+        "min_person_width": 100,
+        "pr_threshold": 0.5,
+        "body_database": "../CommonDB/database_dome_body_front_only_personal.pkl",
+        "body_feat_life": 32400
+    },
+    "pmv_model_info": {
+        "air_speed": 0.1,
+        "room_temp": 22.6,
+        "radiant_temp": 22.6,
+        "rel_humidity": 57.8
+    },
+    "camera": {
+        "camera_width": 1280,
+        "camera_height": 960,
+        "camera_fps": 10,
+        "fisheye": 0,
+        "camera_source1": "rtsp://Admin:Welcome123@192.168.0.145/MediaInput/h264/Stream_1",
+        "camera_source2" : "rtsp://Admin:Welcome123@192.168.0.21/MediaInput/h264/Stream_1",
+        "cam1_roi": [649,474,777,482,744,836,454,787],
+        "cam2_roi": [107,481,255,428,521,748,254,871]
+    },
+    "count": 2
+}

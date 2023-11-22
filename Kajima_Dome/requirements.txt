@@ -1,0 +1,14 @@
+bson==0.5.10
+Cython
+easydict
+matplotlib
+mxnet-cu114
+numpy
+opencv-python
+rapid
+redis==4.1.4
+scikit-image
+scikit-learn
+scipy
+termcolor
+torchvision
