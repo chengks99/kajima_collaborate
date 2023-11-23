@@ -8,6 +8,7 @@ import numpy as np
 import sys
 import pathlib
 import redis
+import hashlib
 scriptpath = pathlib.Path(__file__).parent.resolve()
 sys.path.append(str(scriptpath.parent / 'common'))
 from jsonutils import json2str
@@ -35,6 +36,8 @@ class PandasUtils(object):
         self.th = threading.Thread(target=self.loop)
         self.th.start()
 
+        self.enc_hid = False
+
         logging.debug('Started PandasUtils ...')
     
     # discard dataframe which longer than discard_Time
@@ -58,6 +61,12 @@ class PandasUtils(object):
         #_pd = self.df[self.df[(self.df['serverTime'] > _startTime) & (self.df['serverTime'] < now)]]
         #self.df = _pd
         return True
+
+    def _encode_hid (self, hid):
+        enc = hashlib.blake2b(key=str(hid).encode(), digest_size=7).hexdigest()
+        if 'Unk' in hid or 'unk' in hid or hid.startswith('9999'):
+            enc = 'UNK-{}'.format(enc[4:])
+        return enc
 
     # insert data into dataframe
     def insert (self, adtype, msg):
@@ -87,7 +96,10 @@ class PandasUtils(object):
             for l in r['list']:
                 _msg['loc_x'] = l[0]
                 _msg['loc_y'] = l[1]
-                _msg['human_id'] = l[2]
+                if self.enc_hid:
+                    _msg['human_id'] = self._encode_hid(l[2])
+                else:
+                    _msg['human_id'] = l[2]
                 _msg['human_comfort'] = l[3] if len(l) > 3 else 0
                 msgList.append(copy.deepcopy(_msg))
         #print (len(msgList))
@@ -172,19 +184,21 @@ class PandasUtils(object):
                     # logging.debug(_time.strftime('%Y-%m-%d %H:%M:%S'))
                     data['time'] = _time.strftime('%Y-%m-%d %H:%M:%S')
 
-                    
-                    if "unk" in data['human_id'].lower() :
-                        data['human_id'] = str(data['cam_id']) + data['human_id'].split("_")[-1].zfill(5)
-                    elif "unknown" == data['human_id'].lower() :
-                        data['human_id'] = str(data['cam_id']) + data['human_id'].split("_")[-1].zfill(5)
-                    else :
-                        data['human_id'].zfill(9)
+                    if not self.enc_hid:
+                        if "unk" in data['human_id'].lower() :
+                            data['human_id'] = str(data['cam_id']) + data['human_id'].split("_")[-1].zfill(5)
+                        elif "unknown" == data['human_id'].lower() :
+                            data['human_id'] = str(data['cam_id']) + data['human_id'].split("_")[-1].zfill(5)
+                        else :
+                            data['human_id'].zfill(9)
                     
                     # logging.debug(data['human_id'])
                     for key, val in data.items():
                         if key == 'time': continue
+                        if self.enc_hid:
+                            if key == 'human_id': continue
                         data[key] = int(val) if not key == 'human_comfort' else float(val)
-
+                    
                     val = (data['cam_id'], data['loc_x'], data['loc_y'], data['time'], data['human_id'], data['microsecond'])
                     if not self.db is None:
                         cur = self.db.execute(_query, data=val, commit=True)

@@ -84,11 +84,11 @@ class MQTTBroker(object):
         logging.debug(ssl.OPENSSL_VERSION)
         self.client.on_connect = self._on_mqtt_connect
         self.client.connect(self.broker, self.port)
-
+        logging.debug('Connected to MQTT Broker {}:{}'.format(self.broker, self.port))
     
     def _on_mqtt_connect (self, client, userdata, flags, rc):
         if rc == 0:
-            logging.debug('Connected to MQTT Broker {}:{}'.format(self.broker, self.port))
+            #logging.debug('Connected to MQTT Broker {}:{}'.format(self.broker, self.port))
             self.is_connected = True
         else:
             logging.error('Reconnect to MQTT Broker {}:{}'.format(self.broker, self.port))
@@ -185,7 +185,6 @@ class MQTTForwarding(PluginModule):
     def _publish (self, res, mqtt_msg, interval=30):
         if self.MQTT:
             self.tt.publish(mqtt_msg)
-        #print ('@@@@@@@@@@@@@@@@@@@@')
         _query = """UPDATE mqtt_device SET last_update =  %s WHERE device_id = %s"""
         _val = (res['time'], res['cam_id'])
         self.dbDict['camera-{}'.format(res['cam_id'])] = {'query': _query, 'value': _val}
@@ -213,7 +212,7 @@ class MQTTForwarding(PluginModule):
                     # if DEBUG:
                     #     bCAM = copy.deepcopy(_res['cam_id'])
                     #     _res['cam_id'] = 7103
-                    enc = hashlib.blake2b(key=str(_res['human_id']).encode(), digest_size=3).hexdigest()
+                    enc = hashlib.blake2b(key=str(_res['human_id']).encode(), digest_size=7).hexdigest()
                     if 'human_comfort' in _res:
                         _name = "human_x_y_comfort"
                         _val = '{}_{}_{}_{}'.format(enc, _res['loc_x'], _res['loc_y'], _res['human_comfort'])
@@ -283,16 +282,17 @@ class MQTTForwarding(PluginModule):
                     #     bCAM = copy.deepcopy(_res['cam_id'])
                     #     _res['cam_id'] = 7103
                     shid = str(_res['human_id'])
-                    enc = hashlib.blake2b(key=shid.encode(), digest_size=3).hexdigest()
+                    enc = hashlib.blake2b(key=shid.encode(), digest_size=7).hexdigest()
                     if 'Unk' in shid or 'unk' in shid or shid.startswith('9999'):
-                        enc = 'UNK_{}'.format(enc)
+                        enc = 'UNK-{}'.format(enc[4:])
+                    #print ('************ hid: {}, encode: {}'.format(shid, enc))
                     if 'human_comfort' in _res:
                         _name = "human_x_y_comfort"
                         _val = '{}_{}_{}_{}'.format(enc, _res['loc_x'], _res['loc_y'], _res['human_comfort'])
                     else:
                         _name = "human_x_y_comfort"
                         _val = '{}_{}_{}_{}'.format(enc, _res['loc_x'], _res['loc_y'], 0)
-
+                    #print ('*************** {}'.format(_val))
                     mqtt_msg = {
                         "PC_ID": '{0:06d}'.format(msg['pcid']),
                         "Device_data": [
