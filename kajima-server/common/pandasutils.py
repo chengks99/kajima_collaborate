@@ -175,7 +175,7 @@ class PandasUtils(object):
                         'loc_y': _edf['loc_y'].values[0],
                         'time': _edf['timestamp'].values[0],
                         'human_id': _edf['human_id'].values[0],
-                        'human_comfort': _edf['human_comfort'].values[0],
+                        #'human_comfort': _edf['human_comfort'].values[0],
                         'microsecond': _edf['timestamp'].dt.microsecond.values[0],
                     }
                     _time = data['time'].astype(dt.datetime)
@@ -186,20 +186,19 @@ class PandasUtils(object):
 
                     if not self.enc_hid:
                         if "unk" in data['human_id'].lower() :
-                            data['human_id'] = str(data['cam_id']) + data['human_id'].split("_")[-1].zfill(5)
+                            data['human_id'] = str('9999') + data['human_id'].split("_")[-1].zfill(5)
                         elif "unknown" == data['human_id'].lower() :
-                            data['human_id'] = str(data['cam_id']) + data['human_id'].split("_")[-1].zfill(5)
+                            data['human_id'] = str('9999') + data['human_id'].split("_")[-1].zfill(5)
                         else :
                             data['human_id'].zfill(9)
                     
                     # logging.debug(data['human_id'])
                     for key, val in data.items():
                         if key == 'time': continue
-                        if self.enc_hid:
-                            if key == 'human_id': continue
                         data[key] = int(val) if not key == 'human_comfort' else float(val)
                     
                     val = (data['cam_id'], data['loc_x'], data['loc_y'], data['time'], data['human_id'], data['microsecond'])
+                    print (val)
                     if not self.db is None:
                         cur = self.db.execute(_query, data=val, commit=True)
 
