@@ -55,11 +55,24 @@ class PandasUtils(object):
                 self.humanList[hid] = _df
         except Exception as e:
             logging.error("Panda check discard error: {}".format(e))
-            pass
+            return False
+            #pass
         #print (self.df['serverTime'].unique())
 
         #_pd = self.df[self.df[(self.df['serverTime'] > _startTime) & (self.df['serverTime'] < now)]]
         #self.df = _pd
+        return True
+
+    def check_discard_confident (self, now, discard_time=None):
+        discard_time = self.disard_time if discard_time is None else discard_time
+        try:
+            for hid, df in self.humanList.items():
+                _df = df[df['confident'] == df['confident'].max()]
+                self.humanList[hid] = _df
+        except Exception as e:
+            logging.error("Panda check discard error: {}".format(e))
+            return False
+            #pass
         return True
 
     def _encode_hid (self, hid):
@@ -101,6 +114,7 @@ class PandasUtils(object):
                 else:
                     _msg['human_id'] = l[2]
                 _msg['human_comfort'] = l[3] if len(l) > 3 else 0
+                _msg['confident'] = l[4] if len(l) > 4 else -1
                 msgList.append(copy.deepcopy(_msg))
         #print (len(msgList))
         # from operator import itemgetter

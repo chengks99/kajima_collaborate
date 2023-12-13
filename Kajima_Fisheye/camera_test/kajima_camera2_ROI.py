@@ -327,8 +327,9 @@ class Camera(Adaptor):
                         #print (res)
                         for k, v in res.items():
                             if k == time_used : 
-                                list = [sublist + [str(num)] for sublist, num in zip(v, _output[-2])]
-                                resList.append({'list': list, 'timestamp': t})
+                                _list = [sublist + [str(num)] for sublist, num in zip(v, _output[-2])]
+                                _list[0].extend(score)
+                                resList.append({'list': _list, 'timestamp': t})
                         # logging.debug(res)
                         # logging.debug(len(_output[3]))
                         # logging.debug(_output[3])
