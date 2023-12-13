@@ -175,7 +175,7 @@ class PandasUtils(object):
                         'loc_y': _edf['loc_y'].values[0],
                         'time': _edf['timestamp'].values[0],
                         'human_id': _edf['human_id'].values[0],
-                        #'human_comfort': _edf['human_comfort'].values[0],
+                        'human_comfort': _edf['human_comfort'].values[0],
                         'microsecond': _edf['timestamp'].dt.microsecond.values[0],
                     }
                     _time = data['time'].astype(dt.datetime)
