@@ -102,6 +102,7 @@ class Camera(Adaptor):
             'camera.{}.sqlquery'.format(self.args.id)
             ]
         self.pcid = self.args.pcid
+        self.devid = self.args.devid
         self.utility = self.args.utility
         self.view = self.args.view
         self.basefile = None
@@ -124,6 +125,7 @@ class Camera(Adaptor):
         else:
             logging.debug('Configuration in redis loaded ...')
             if 'pcid' in cfg: self.pcid = cfg['pcid']
+            if 'devid' in cfg: self.devid = cfg['devid']
             if 'config' in cfg:
                 self.cfg = cfg['config']
             else:

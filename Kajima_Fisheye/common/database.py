@@ -104,7 +104,11 @@ class Database:
 
     def get_details_from_index(self, index):
         # Retrieve the name string without worrying about pandas functions.
-        label = self.data['name'].iloc[index]
-        details = self.data['person_details'].iloc[index]
+        try :
+            label = self.data['name'].iloc[index]
+            details = self.data['person_details'].iloc[index]
+        except :
+            label = 'UnK'
+            details = {'gender': np.nan, 'race': np.nan, 'age': np.nan}
         
         return label, details

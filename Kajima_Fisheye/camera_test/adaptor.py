@@ -43,6 +43,7 @@ class Adaptor(SISPComponentBase):
         self.site = args.site
         self.location = args.location 
         self.pcid = args.pcid
+        self.devid = args.devid
         self.status_period = dt.timedelta(seconds=args.status_period)
         self.last_publish = dt.datetime.now() - self.status_period
         SISPComponentBase.__init__(self, args, **kw)
@@ -106,6 +107,7 @@ class Adaptor(SISPComponentBase):
             "site": self.site,
             "location": self.location,
             "pc-id": self.pcid,
+            "dev-id": self.devid,
         }
     
     def _format_list_ (self, fmt):
@@ -228,7 +230,8 @@ def add_common_adaptor_args(parser, **kw):
     g = parser.add_argument_group("adaptor configuration parameters")
     add_arg(g, "--type", h="the type of adaptor {D}", d=kw.get('type', 'adaptor'), m='TYPE')
     add_arg(g, "--id", h="the ID of the adaptor  {D}", d=kw.get('id', 'adaptor-1'), m='ID')
-    add_arg(g, "--pcid", h="the ID of PC {D}", d=kw.get('pcid', 7000), m='PCID')
+    add_arg(g, "--pcid", h="the ID of PC {D}", d=kw.get('pcid', 7000), m='')
+    add_arg(g, "--devid", h="Kajima Device ID {D}", d=kw.get('devid', 78645), m='DEVID')
     add_arg(g, "--location", h="location of the adaptor  {D}", d=kw.get('location', 'Kajima'), m='LOC')
     add_arg(g, "--site", h="site where the adaptor is deployed  {D}", d=kw.get('site', 'Kajima-Building'), m='SITE')
     add_arg(g, "--status-period", h="interval (seconds) to send status  {D}", t=int, d=kw.get('status_period', 300), m='SEC')

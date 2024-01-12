@@ -115,7 +115,7 @@ class BackendServer (PluginModule):
                 logging.debug('Load configuration for {}'.format(section))
                 if not section in self.cam: self.cam[section] = {}
                 for key in config[section]:
-                    if key == 'id' or key == 'pcid':
+                    if key == 'id' or key == 'pcid' or key == 'devid':
                         self.cam[section][key] = int(config[section][key])
                     else:
                         self.cam[section][key] = str(config[section][key])
@@ -126,10 +126,7 @@ class BackendServer (PluginModule):
                         with open(str(_fpath)) as _cfgf:
                             self.cam[section]['config'] = json.load(_cfgf)
 
-                # if 'camera' in section:
-                #     self.redis_conn.set("camera.{}.config".format(section), json2str(self.cam[section]))
-                # else:
-                #     self.redis_conn.set("dome.{}.config".format(section), json2str(self.cam[section]))
+                self.redis_conn.set("{}.config".format(section.replace('-', '.')), json2str(self.cam[section]))
         else:
             logging.error('Unable to read camera configuration file')
             exit(1)

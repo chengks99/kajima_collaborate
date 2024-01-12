@@ -72,7 +72,8 @@ class PersonEngine(object):
                  body_details,
                  pd_det_threshold=0.5, pd_nms_threshold=0.3, pd_input_resize=0, 
                  max_detected_persons=0, min_person_width=50, pr_threshold=0.3, device=-1):
-        
+        print ('Init Person Engine')
+        self.flag = False
         self.body_details = body_details
         # self.rgb = rgb
         self.min_person_width = min_person_width
@@ -91,7 +92,7 @@ class PersonEngine(object):
         self.feature_engine = FeatureEngine(pr_model, self.LMK_VISIBILITY_THRESHOLD, device)
         logging.debug('Feature Engine loaded ...')
 
-        env_variables =  {'tr': radiant_temp, 'tdb': room_temp, 
+        self.env_variables =  {'tr': radiant_temp, 'tdb': room_temp, 
                         'to': room_temp, 'rh': rel_humidity, 'v': air_speed}
 
         #print (pr_threshold, body_db_file, pmv_model, env_variables)
@@ -99,7 +100,7 @@ class PersonEngine(object):
             pr_threshold, 
             body_db_file, 
             pmv_model, 
-            env_variables,
+            self.env_variables,
             body_details=self.body_details,
         )
         logging.debug('Body Tracker loaded ...')
@@ -124,7 +125,8 @@ class PersonEngine(object):
         # self.actionNet = torch.load(model_locatioon)
 
         self.actionNet = self.actionNet.to(self.device) 
-        self.actionNet.eval()       
+        self.actionNet.eval()  
+        self.flag = True     
 
         # self.queue_det = Queue(1)
         # self.queue_skl = Queue(1)
@@ -136,6 +138,16 @@ class PersonEngine(object):
         self.body_details = body_details
         self.BodyTracker.body_updates(body_details)
         
+    def set_env_var (self, temp, humid):
+        logging.debug('Env. data T: {}, H: {}'.format(temp, humid))
+        #env_variables =  {'tr': radiant_temp, 'tdb': temp, 
+        #                'to': temp, 'rh': humid, 'v': air_speed}
+        self.env_variables['tdb'] = temp
+        self.env_variables['to'] = temp
+        self.env_variables['rh'] = humid
+        if self.BodyTracker.flag:
+            self.BodyTracker.set_env_var(self.env_variables)
+
     def YoloxPersonBoxTrackMatchFeature(self, bgrimg, new_dts, lmks, lmk_confs, body_crops, body_features):
         img_dim = bgrimg.shape[:2]
         # rgbimg = cv2.cvtColor(bgrimg, cv2.COLOR_BGR2RGB)

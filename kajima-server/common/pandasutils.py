@@ -62,7 +62,7 @@ class PandasUtils(object):
         #_pd = self.df[self.df[(self.df['serverTime'] > _startTime) & (self.df['serverTime'] < now)]]
         #self.df = _pd
         return True
-
+    
     def check_discard_confident (self, now, discard_time=None):
         discard_time = self.disard_time if discard_time is None else discard_time
         try:
@@ -163,7 +163,13 @@ class PandasUtils(object):
     def loop (self):
         while True:
             now = dt.datetime.now()
-            if not self.check_discard(now): continue
+            discard_by_confident = True
+            if discard_by_confident:
+                if not self.check_discard_confident(now): 
+                    if not self.check_discard(now):
+                        continue
+            else:
+                if not self.check_discard(now): continue
             #try:
             #    df = self.dfList.get(timeout=1)  # Timeout of 1 second
             #except:
@@ -205,14 +211,24 @@ class PandasUtils(object):
                             data['human_id'] = str('9999') + data['human_id'].split("_")[-1].zfill(5)
                         else :
                             data['human_id'].zfill(9)
+                        data['human_id'] = int(data['human_id'])
                     
+                    # checking hid exist in human_table
+                    _query = "SELECT human_id FROM human_table WHERE human_id = {}".format(data['human_id'])
+                    cur = self.db.query(_query)
+                    if len(cur) == 0:
+                        logging.debug('Unknown ID {} not found in human_table, insert into it...'.format(data['human_id']))
+                        _query = 'INSERT INTO human_table (human_id, createdAt, updatedAt, is_deleted) VALUES (%s, %s, %s, %s)'
+                        val = (data['human_id'], now.strftime('%Y%m%d%H%M%S'), now.strftime('%Y%m%d%H%M%S'), 0)
+                        self.db.execute(_query, data=val, commit=True)
+                                      
                     # logging.debug(data['human_id'])
                     for key, val in data.items():
                         if key == 'time': continue
                         data[key] = int(val) if not key == 'human_comfort' else float(val)
                     
                     val = (data['cam_id'], data['loc_x'], data['loc_y'], data['time'], data['human_id'], data['microsecond'])
-                    print (val)
+                    #print (val)
                     if not self.db is None:
                         cur = self.db.execute(_query, data=val, commit=True)
 

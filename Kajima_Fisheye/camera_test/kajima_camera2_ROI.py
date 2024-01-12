@@ -140,9 +140,11 @@ class Camera(Adaptor):
         self.subscribe_channels = [
             'camera.{}.update'.format(self.args.id),
             'camera.{}.sqlquery'.format(self.args.id),
-            'person.body.updates'
+            'person.body.updates',
+            'http.data.int'
             ]
         self.pcid = self.args.pcid
+        self.devid = self.args.devid
         self.utility = self.args.utility
         self.view = self.args.view
         self.basefile = None
@@ -150,7 +152,7 @@ class Camera(Adaptor):
         self.load_config()
         self.start_listen_bus()
         self.run()
-        self.ROI = np.array(self.cfg.get('cam_roi', [0,0,0,2991,2991,2991,2991,0]), dtype=np.int)
+        self.ROI = np.array(self.cfg.get('cam_roi', [0,0,0,2991,2991,2991,2991,0]), dtype=np.int64)
         ROI_length = len(self.ROI) // 2
         self.ROI = self.ROI.reshape(ROI_length,-1)
             
@@ -169,6 +171,7 @@ class Camera(Adaptor):
         else:
             logging.debug('Configuration in redis loaded ...')
             if 'pcid' in cfg: self.pcid = cfg['pcid']
+            if 'devid' in cfg: self.devid = cfg['devid']
             if 'config' in cfg:
                 self.cfg = cfg['config']
             else:
@@ -205,7 +208,8 @@ class Camera(Adaptor):
                     self.cur_engine.person_body_updates(msg)
                 except:
                     pass
-                
+            if ch == 'http.data.int':
+                self.process_env_data(msg)
 
     # container for kajima camera
     def run (self):
@@ -271,8 +275,20 @@ class Camera(Adaptor):
 
         logging.debug('Camera Stream module initialized...')
     
+    # process env data
+    def process_env_data (self, msg):
+        _dataMsg = msg.get('data', {})
+        _data = _dataMsg.get(str(self.devid), {})
+        if not _data == {}:
+            _temp = _data.get('T', {}).get('value', -1)
+            _hum = _data.get('H', {}).get('value', -1)
+            if _temp > 0 and _hum > 0:
+                if self.cur_engine.flag:
+                    logging.debug('Env. data T: {}, H: {}'.format(_temp, _hum))
+                    self.cur_engine.set_env_var(_temp, _hum)
+    
     # thread loop for process image and result publish
-    def cam_run (self):
+    def cam_run (self): 
         if self.view:
             import cv2
         
@@ -299,6 +315,8 @@ class Camera(Adaptor):
                     res = {}
 
                     boxes, person_crop, face_labels, tids, lmks, image, pmvs, actions, score   = _output
+                    print ('********')
+                    print (score)
                     # logging.debug("###########{}##########".format(len(tids)))
                     # old_boxes = copy.deepcopy(boxes)
                     index2delete = []
@@ -324,12 +342,14 @@ class Camera(Adaptor):
                         # res format should ne {'dt': [], 'dt': []}
                         # convert into [{'list': [], 'timestamp': ''}, {'list': [], 'timestamp': ''}]
                         resList = []
+                        #print ('**************')
                         #print (res)
                         for k, v in res.items():
                             if k == time_used : 
                                 _list = [sublist + [str(num)] for sublist, num in zip(v, _output[-2])]
                                 _list[0].extend(score)
                                 resList.append({'list': _list, 'timestamp': t})
+                        print (resList)
                         # logging.debug(res)
                         # logging.debug(len(_output[3]))
                         # logging.debug(_output[3])
@@ -337,6 +357,7 @@ class Camera(Adaptor):
                         # logging.debug("Track ID {}".format(tids))
                         # logging.debug("XXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
                         _res = {'timestamp': dt.datetime.now(), 'result': resList, 'pcid': self.pcid}
+                        print (_res)
                         # logging.debug("Continue to process but no publish")
                         # continue
                         self.redis_conn.publish(

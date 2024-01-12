@@ -132,6 +132,7 @@ class MicHolder(object):
 
 class DetectionEngine(object):
     def __init__(self, cfg,body_details) -> None:
+        self.flag = False
         self.body_details = body_details
         self.init_pe(cfg)
         self.input_q = Queue(1)
@@ -206,6 +207,11 @@ class DetectionEngine(object):
         )
 
         logging.debug('Person Engine loaded successfully')
+        self.flag = True
+    
+    def set_env_var (self, temp, humid):
+        if self.person_engine.flag:
+            self.person_engine.set_env_var(temp, humid)
  
     def person_body_updates(self,msg):
         self.body_details = msg
