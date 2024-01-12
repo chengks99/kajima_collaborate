@@ -19,6 +19,7 @@ import configparser
 import numpy as np
 import json
 import base64
+import hashlib
 from json import JSONEncoder
 from io import BytesIO
 scriptpath = pathlib.Path(__file__).parent.resolve()
@@ -44,7 +45,7 @@ class BackendServer (PluginModule):
                         'camera.*.query', 'camera.*.result',
                         'audio.*.status', 'audio.*.config', 'audio.*.detail-config', 
                         'audio.*.query', 'audio.*.result',
-                        'util.*.query', '*.body.notify'
+                        'util.*.query', '*.body.notify', 'face.recognition.vector'
                         ]
 
     def __init__(self, args, **kw) -> None:
@@ -307,26 +308,28 @@ class BackendServer (PluginModule):
         #     print(msg['timestamp'].timestamp()-self.lastreport[ch])
         #     if msg['timestamp'].timestamp() - self.lastreport[ch] > 5:
         #         self.lastreport[ch] = msg['timestamp'].timestamp()
-                if fnmatch.fnmatch(ch, 'camera.*.status'):
-                    self.update_camera_status('.'.join(ch.split('.')[1:-1]), msg) 
-                elif fnmatch.fnmatch(ch, 'camera.*.result'):
-                    self.update_camera_result('.'.join(ch.split('.')[1:-1]), msg)
-                elif fnmatch.fnmatch(ch, 'camera.*.query'):
-                    self.response_camera_query('.'.join(ch.split('.')[1:-1]), msg)
-                elif fnmatch.fnmatch(ch, 'audio.*.status'):
-                    self.update_audio_status('.'.join(ch.split('.')[1:-1]), msg)
-                elif fnmatch.fnmatch(ch, 'audio.*.query'):
-                    self.response_audio_query('.'.join(ch.split('.')[1:-1]), msg)
-                elif fnmatch.fnmatch(ch, 'audio.*.result'):
-                    self.update_audio_result('.'.join(ch.split('.')[1:-1]), msg)
-                elif fnmatch.fnmatch(ch, 'face.*.extraction'):
-                    self.update_face_feature(msg)
-                # elif fnmatch.fnmatch(ch, 'dome.*.query'):
-                #     self.response_dome_query('.'.join(ch.split('.')[1:-1]), msg)
-                elif fnmatch.fnmatch(ch, '*.body.notify'):
-                    self.update_body_features(msg)
-                elif fnmatch.fnmatch(ch, 'util.*.query'):
-                    self.update_detection('.'.join(ch.split('.')[1:-1]), msg)
+        if fnmatch.fnmatch(ch, 'camera.*.status'):
+            self.update_camera_status('.'.join(ch.split('.')[1:-1]), msg) 
+        elif fnmatch.fnmatch(ch, 'camera.*.result'):
+            self.update_camera_result('.'.join(ch.split('.')[1:-1]), msg)
+        elif fnmatch.fnmatch(ch, 'camera.*.query'):
+            self.response_camera_query('.'.join(ch.split('.')[1:-1]), msg)
+        elif fnmatch.fnmatch(ch, 'audio.*.status'):
+            self.update_audio_status('.'.join(ch.split('.')[1:-1]), msg)
+        elif fnmatch.fnmatch(ch, 'audio.*.query'):
+            self.response_audio_query('.'.join(ch.split('.')[1:-1]), msg)
+        elif fnmatch.fnmatch(ch, 'audio.*.result'):
+            self.update_audio_result('.'.join(ch.split('.')[1:-1]), msg)
+        elif fnmatch.fnmatch(ch, 'face.*.extraction'):
+            self.update_face_feature(msg)
+        # elif fnmatch.fnmatch(ch, 'dome.*.query'):
+        #     self.response_dome_query('.'.join(ch.split('.')[1:-1]), msg)
+        elif fnmatch.fnmatch(ch, '*.body.notify'):
+            self.update_body_features(msg)
+        elif fnmatch.fnmatch(ch, 'util.*.query'):
+            self.update_detection('.'.join(ch.split('.')[1:-1]), msg)
+        elif fnmatch.fnmatch(ch, 'face.recognition.*'):
+            self.update_face_feature(msg)
             # else:
             #     pass
 
@@ -619,6 +622,33 @@ class BackendServer (PluginModule):
                 self.init_db.execute(_query, data=val, commit=False)
                 logging.debug("Updated body features for {}".format(data['human_id']))
             self.init_db.commit()
+    
+    def update_face_feature (self, msg):
+        _Ffv =[]
+        if not msg is None:
+            _faceFV = msg.get('fvList', [])
+            for f in _faceFV:
+                hid = hashlib.blake2b(key=str(f['name']).encode(), digest_size=7).hexdigest()
+                _query = """SELECT * FROM human_table WHERE human_id = {}""".format(hid)
+                cur = self.init_db.query(_query)
+                _now = dt.datetime.now()
+                if len(cur) == 0:
+                    _query = """INSERT INTO human_table (human_id, createdAt, updatedAt, is_deleted, gender, race, age, face_pth) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
+                    val = (hid, _now.strftime('%Y%m%d%H%M%S'), _now.strftime('%Y%m%d%H%M%S'), 0, f['gender'], f['race'], f['age_grp'], f['fv'])
+                    self.init_db.execute(_query, data=val, commit=True)
+                else:
+                    _query = """UPDATE human_table SET face_pth = %s age = %s race = %s gender=%s updatedAt = %s WHERE human_id = %s"""
+                    val = (f['fv'], f['age'], f['race'], f['gender'], _now.strftime('%Y%m%d%H%M%S'))
+                    self.init_db.execute(_query, data=val, commit=False)
+                _Ffv.append({
+                    "Device_ID": "7000",
+                    "Data_name": "human_age_gender_race",
+                    "Data_type": "string",
+                    "Value": '{}_{}_{}_{}'.format(hid, f['age_grp'], f['gender'], f['race'])
+                    }
+                )
+            if len(_Ffv) > 1:
+                self.redis_conn.publish('sql.humanChanges.listener', json2str({'fvList': _Ffv, 'pcid': 7000, 'timeStamp': _now}))
 
     # closing
     def close (self):

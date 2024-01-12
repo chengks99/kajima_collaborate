@@ -32,5 +32,5 @@ pip3 install -r requirements.txt
 Run below command to start backend server:
 
 ```python
-python3 feature/faceFeaureExtraction.py --redis-host [CONTROL_PC_IP] --redis-passwd ewaic –d
+python3 kajima/kajima-face.py --redis-host [CONTROL_PC_IP] --redis-passwd ewaic –d
 ```

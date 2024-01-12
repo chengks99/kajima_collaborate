@@ -137,7 +137,7 @@ class MQTTBroker(object):
 
 class MQTTForwarding(PluginModule):
     component_name = 'mqtt-forward'
-    subscribe_channels = ['sql.changes.listener']
+    subscribe_channels = ['sql.changes.listener', 'sql.humanChanges.listener']
 
     def __init__(self, redis_conn, db, args, **kw):
         self.db = self.init_db(args)
@@ -271,94 +271,108 @@ class MQTTForwarding(PluginModule):
     
     def process_redis_msg (self, ch, msg):
         if ch in self.subscribe_channels:
-            #logging.debug("{}: redis-msg received from '{}': {}".format(self, ch, msg))
-            res = msg.get('msg', None)
-            #print ('*********')
-            #print (res)
-            if not res is None:
-                _res = json.loads(res)
-                if 'cam_id' in _res:
-                    # _res['comfort'] = 0
-                    # if DEBUG:
-                    #     bCAM = copy.deepcopy(_res['cam_id'])
-                    #     _res['cam_id'] = 7103
-                    shid = str(_res['human_id'])
-                    enc = hashlib.blake2b(key=shid.encode(), digest_size=7).hexdigest()
-                    if 'Unk' in shid or 'unk' in shid or shid.startswith('9999'):
-                        enc = 'UNK-{}'.format(enc[4:])
-                    #print ('************ hid: {}, encode: {}'.format(shid, enc))
-                    if 'human_comfort' in _res:
-                        _name = "human_x_y_comfort"
-                        _val = '{}_{}_{}_{}'.format(enc, _res['loc_x'], _res['loc_y'], _res['human_comfort'])
-                    else:
-                        _name = "human_x_y_comfort"
-                        _val = '{}_{}_{}_{}'.format(enc, _res['loc_x'], _res['loc_y'], 0)
-                    #print ('*************** {}'.format(_val))
-                    mqtt_msg = {
-                        "PC_ID": '{0:06d}'.format(msg['pcid']),
-                        "Device_data": [
-                            {
-                                "Device_ID": '{0:06d}'.format(_res['cam_id']),
-                                "Data_name": _name,
-                                "Data_type": "string",
-                                "Value": _val,
-                            }
-                        ],
-                        "Timestamp":int(_res['time']),
-                    }
-                    self.tt.publish(mqtt_msg)
-
-                if 'mic_id' in _res:
-                    # accumulate data to send every 5s, 
-                    # need to inform PRDCV change of format to 
-                    _mic = {
-                        "PC_ID": '{0:06d}'.format(msg['pcid']),
-                        "Device_data": [
-                            {
-                                "Device_ID": '{0:06d}'.format(_res['mic_id']),
-                                "Data_name": 'volume level',
-                                "Data_type": "integer",
-                                "Value": int(_res['audio_level']),
-                            },
-                            {
-                                "Device_ID": '{0:06d}'.format(_res['mic_id']),
-                                "Data_name": 'emotion type',
-                                "Data_type": "integer",
-                                "Value": int(_res['status']),
-                            }
-                        ],
-                        "Timestamp":int(_res['time']),
-                    }
-                    if _mic["PC_ID"] in self.micData['dataDict']:
-                        self.micData['dataDict'][_mic['PC_ID']]["Device_data"].extend(_mic['Device_data'])
-                        self.micData['dataDict'][_mic['PC_ID']]['Timestamp'] = _mic['Timestamp']
-                    else:
-                        self.micData['dataDict'][_mic['PC_ID']] = _mic
-
-                    # send message every 5s
-                    _now = dt.datetime.now()
-                    _timediff = _now - self.micData.get('time', _now)
-                    if _timediff.total_seconds() > 5:
-                        for key in self.micData['dataDict']:
-                            self.tt.publish(self.micData['dataDict'][key])
-                        #self.tt.publish(self.micData['dataDict'])
-                        self.micData['time'] = _now
-                        self.micData['dataDict'] = {}
+            if ch == 'sql.changes.listener':
+                self.updates_result(msg)
+            if ch == 'sql.humanChanges.listener':
+                self.updates_human(msg)
+    
+    def updates_human (self, msg):
+        _hm = {
+            "PC_ID": msg.get('pcid', '7000'),
+            "Human_data": msg.get('fvList', []),
+            "TimeStamp": int(msg.get('timestamp', dt.datetime.now()).timestamp()),
+        }
+        self.tt.publish(_hm)
+    
+    def updates_result (self, msg):
+        #logging.debug("{}: redis-msg received from '{}': {}".format(self, ch, msg))
+        res = msg.get('msg', None)
+        #print ('*********')
+        #print (res)
+        if not res is None:
+            _res = json.loads(res)
+            if 'cam_id' in _res:
+                # _res['comfort'] = 0
                 # if DEBUG:
-                #     _res['cam_id'] = bCAM
-                # self._publish(_res, mqtt_msg)
-                '''
-                MQTT_MSG = {
-                    "PC_ID": '007000',                                                                                  ### PC ID
-                    "Device_data": [                                                                                    ### consolidate all microphone data within same PC_ID into
-                        {"Device_ID": '007201', "Data_name": 'volume level', "Data_type": "integer", "Value": 56},      ###     a single list and send out every 5s
-                        {"Device_ID": '007202', "Data_name": 'volume level', "Data_type": "integer", "Value": 80},
-                        {"Device_ID": '007201', "Data_name": 'emotion type', "Data_type": "integer", "Value": 0},
-                        {"Device_ID": '007202', "Data_name": 'emotion type', "Data_type": "integer", "Value": 2},
+                #     bCAM = copy.deepcopy(_res['cam_id'])
+                #     _res['cam_id'] = 7103
+                shid = str(_res['human_id'])
+                enc = hashlib.blake2b(key=shid.encode(), digest_size=7).hexdigest()
+                if 'Unk' in shid or 'unk' in shid or shid.startswith('9999'):
+                    enc = 'UNK-{}'.format(enc[4:])
+                #print ('************ hid: {}, encode: {}'.format(shid, enc))
+                if 'human_comfort' in _res:
+                    _name = "human_x_y_comfort"
+                    _val = '{}_{}_{}_{}'.format(enc, _res['loc_x'], _res['loc_y'], _res['human_comfort'])
+                else:
+                    _name = "human_x_y_comfort"
+                    _val = '{}_{}_{}_{}'.format(enc, _res['loc_x'], _res['loc_y'], 0)
+                #print ('*************** {}'.format(_val))
+                mqtt_msg = {
+                    "PC_ID": '{0:06d}'.format(msg['pcid']),
+                    "Device_data": [
+                        {
+                            "Device_ID": '{0:06d}'.format(_res['cam_id']),
+                            "Data_name": _name,
+                            "Data_type": "string",
+                            "Value": _val,
+                        }
                     ],
-                    "Timestamp": 1697734421,                                                                            ### record lastest microphne data's timestamp
+                    "Timestamp":int(_res['time']),
                 }
-                '''
+                self.tt.publish(mqtt_msg)
+
+            if 'mic_id' in _res:
+                # accumulate data to send every 5s, 
+                # need to inform PRDCV change of format to 
+                _mic = {
+                    "PC_ID": '{0:06d}'.format(msg['pcid']),
+                    "Device_data": [
+                        {
+                            "Device_ID": '{0:06d}'.format(_res['mic_id']),
+                            "Data_name": 'volume level',
+                            "Data_type": "integer",
+                            "Value": int(_res['audio_level']),
+                        },
+                        {
+                            "Device_ID": '{0:06d}'.format(_res['mic_id']),
+                            "Data_name": 'emotion type',
+                            "Data_type": "integer",
+                            "Value": int(_res['status']),
+                        }
+                    ],
+                    "Timestamp":int(_res['time']),
+                }
+                if _mic["PC_ID"] in self.micData['dataDict']:
+                    self.micData['dataDict'][_mic['PC_ID']]["Device_data"].extend(_mic['Device_data'])
+                    self.micData['dataDict'][_mic['PC_ID']]['Timestamp'] = _mic['Timestamp']
+                else:
+                    self.micData['dataDict'][_mic['PC_ID']] = _mic
+
+                # send message every 5s
+                _now = dt.datetime.now()
+                _timediff = _now - self.micData.get('time', _now)
+                if _timediff.total_seconds() > 5:
+                    for key in self.micData['dataDict']:
+                        self.tt.publish(self.micData['dataDict'][key])
+                    #self.tt.publish(self.micData['dataDict'])
+                    self.micData['time'] = _now
+                    self.micData['dataDict'] = {}
+            # if DEBUG:
+            #     _res['cam_id'] = bCAM
+            # self._publish(_res, mqtt_msg)
+            '''
+            MQTT_MSG = {
+                "PC_ID": '007000',                                                                                  ### PC ID
+                "Device_data": [                                                                                    ### consolidate all microphone data within same PC_ID into
+                    {"Device_ID": '007201', "Data_name": 'volume level', "Data_type": "integer", "Value": 56},      ###     a single list and send out every 5s
+                    {"Device_ID": '007202', "Data_name": 'volume level', "Data_type": "integer", "Value": 80},
+                    {"Device_ID": '007201', "Data_name": 'emotion type', "Data_type": "integer", "Value": 0},
+                    {"Device_ID": '007202', "Data_name": 'emotion type', "Data_type": "integer", "Value": 2},
+                ],
+                "Timestamp": 1697734421,                                                                            ### record lastest microphne data's timestamp
+            }
+            '''
 
     def close (self):
         if self.MQTT:
