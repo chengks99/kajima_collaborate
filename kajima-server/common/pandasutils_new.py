@@ -38,7 +38,10 @@ class PandasUtils(object):
         return ehid
 
     def convert_hid (self, hid):
-        if 'unk' in hid.lower() or 'unknown' in hid.lower():
+        print ('Converting human ID of : {}'.format(hid))
+        if 'unknown' == hid.lower():
+            return 99999999
+        elif 'unk' in hid.lower():
             return int(str('9999') + hid.split('_')[-1].zfill(5))
         else:
             return int(hid.zfill(9))
