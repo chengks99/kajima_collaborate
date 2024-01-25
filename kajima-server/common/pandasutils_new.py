@@ -64,6 +64,8 @@ class PandasUtils(object):
         _df = pd.DataFrame(msgList)
         self.df = pd.concat([self.df, _df], ignore_index=True)
         self.df.reset_index()
+        # drop duplication
+        #self.df[~self.df.duplicated(['human_id', 'timestamp'], keep=False)]
         self.df[['serverTime']] = self.df[['serverTime']].apply(pd.to_datetime)
 
     def time_format_conversion (self, dTime):
@@ -132,7 +134,7 @@ class PandasUtils(object):
                 pass
             if self.th_quit.is_set():
                 pass
-            time.sleep(0.1)
+            time.sleep(self.discard_time)
 
 if __name__ == "__main__":
     pu = PandasUtils(None, None)
