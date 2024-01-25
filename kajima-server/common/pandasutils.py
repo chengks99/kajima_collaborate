@@ -67,7 +67,9 @@ class PandasUtils(object):
         discard_time = self.disard_time if discard_time is None else discard_time
         try:
             for hid, df in self.humanList.items():
-                _df = df[df['confident'] == df['confident'].max()]
+                _startTime = now - dt.timedelta(seconds=discard_time)
+                _df = df[(df['serverTime'] > _startTime)]
+                _df = _df[_df['confident'] == _df['confident'].max()]
                 self.humanList[hid] = _df
         except Exception as e:
             logging.error("Panda check discard error: {}".format(e))
@@ -145,19 +147,6 @@ class PandasUtils(object):
             else:
                 self.humanList[_hid] = _new_df
             logging.debug('<{}> {} Frame Length: {}'.format(adtype, _hid, len(self.humanList[_hid].index)))
-
-        # _new_df = pd.DataFrame(msgList)
-        #print ('##### insert')
-        #if len(self.df.index) == 0:
-        #    self.df = _new_df
-        #else:
-        #    self.df = pd.concat([self.df, _new_df], ignore_index=True)
-        #print (self.df)
-        #logging.debug('<{}> Pandas Frame Length: {}'.format(adtype,len(self.df.index)))
-        #self.dfList.put(self.df)
-        # logging.debug('Update Camera result for {}: {}'.format(adtype, msg))
-        # self.loop()
-        
     
     # loop every discard_time to retrieve data from dataframe and insert latest unique data into SQL
     def loop (self):
@@ -178,6 +167,7 @@ class PandasUtils(object):
             #_sdf = copy.deepcopy(df)
             try:
                 for hid, df in self.humanList.items():
+                    print ("Processing HID: {}".format(hid))
                     if len(df.index) == 0: continue
                     _startTime = now - dt.timedelta(seconds=self.disard_time)
                     _df = df[df['serverTime'] >= _startTime]
@@ -240,72 +230,6 @@ class PandasUtils(object):
             except Exception as e:
                 logging.error("Panda frame looping error: {}".format(e))
                 pass
-
-
-            # if self.df is None: continue
-            # if len(self.df.index) == 0: continue
-            # _sdf = copy.deepcopy(self.df)
-            # _startTime = now - dt.timedelta(seconds=self.disard_time)
-            # _df = _sdf[_sdf['serverTime'] >= _startTime]
-            # _sdf.iloc[0:0]
-
-            # if len(_df.index) == 0: continue
-            # for u in _df['human_id'].unique().tolist():
-            #     _hdf = _df[_df['human_id'] == u]
-            #     #print (u)
-            #     #print (_hdf)
-            #     if _hdf.empty: continue
-            #     _edf = _hdf.tail(1)
-            #     # logging.debug(_edf)
-                
-            #     #!FIXME: insert into database
-            #     #_query = "SELECT * FROM cam_table_demo WHERE cam_id = {}".format(camID)
-            #     #cur = self.db.execute(_query)
-            #     _query = "INSERT INTO location_table (cam_id,loc_x,loc_y,time,human_id,microsecond) VALUES (%s,%s,%s,%s,%s,%s)"
-
-            #     _query = """INSERT INTO location_table (cam_id, loc_x, loc_y, time, human_id, microsecond) VALUES (%s, %s, %s, %s, %s, %s)"""
-            #     data = {
-            #         'cam_id': _edf['cam_id'].values[0].replace('camera-', ''),
-            #         'loc_x': _edf['loc_x'].values[0],
-            #         'loc_y': _edf['loc_y'].values[0],
-            #         'time': _edf['timestamp'].values[0],
-            #         'human_id': _edf['human_id'].values[0],
-            #         'human_comfort': _edf['human_comfort'].values[0],
-            #         'microsecond': _edf['timestamp'].dt.microsecond.values[0],
-            #     }
-            #     _time = data['time'].astype(dt.datetime)
-            #     _time = dt.datetime.utcfromtimestamp(_time/1e9)
-            #     # _time = pd.to_datetime(_time,unit='s')
-            #     # logging.debug(_time.strftime('%Y-%m-%d %H:%M:%S'))
-            #     data['time'] = _time.strftime('%Y-%m-%d %H:%M:%S')
-
-            #     #FIXME: TESTING CODE
-            #     ## Split the human ID from the unk
-            #     if "unknown" == data['human_id'].lower() :
-            #         data['human_id'] = '99999999'
-            #     elif "unk" in data['human_id'].lower() :
-            #         data['human_id'] = '9999' + data['human_id'].split("_")[-1].zfill(4)
-            #     else :
-            #         data['human_id'].zfill(8)
-            #     # if data['human_id'].lower() is 'unknown':
-            #     #      data['human_id'] = '999989'
-            #     # else:
-            #     #     data['human_id'] = '99999{}'.format( data['human_id'][-1])
-            #     #FIXME: END TEST
-            #     # logging.debug(data)
-            #     for key, val in data.items():
-            #         if key == 'time': continue
-            #         data[key] = int(val) if not key == 'human_comfort' else float(val)
-
-            #     val = (data['cam_id'], data['loc_x'], data['loc_y'], data['time'], data['human_id'], data['microsecond'])
-            #     if not self.db is None:
-            #         cur = self.db.execute(_query, data=val, commit=True)
-
-            #     # logging.debug('Update Camera result for {}: {}'.format(data['cam_id'], json2str(data)))
-            #     data['time'] = int(_time.timestamp())
-            #     # logging.debug(data['human_comfort'])
-            #     #print ('Try to publish {} ....'.format(data))
-            #     self.redis_conn.publish('sql.changes.listener', json2str({'id': _edf['cam_id'].values[0], 'pcid': int(_edf['pcid'].values[0]), 'msg': json2str(data)}))
             if self.th_quit.is_set():
                 pass
             time.sleep(self.disard_time)

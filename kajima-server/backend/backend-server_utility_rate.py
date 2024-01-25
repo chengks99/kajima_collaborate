@@ -29,7 +29,7 @@ from sqlwrapper import SQLDatabase
 import argsutils as au
 from jsonutils import json2str,str2json
 from plugin_module import PluginModule
-from pandasutils import PandasUtils
+from pandasutils_new import PandasUtils
 
 
 class NumpyArrayEncoder(JSONEncoder):
