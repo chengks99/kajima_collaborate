@@ -58,18 +58,21 @@ class PandasUtils(object):
         for res in msg.get('result', []):
             _msg['timestamp'] = res['timestamp']
             for rl in res.get('list', []):
-                _msg['loc_x'] = rl[0]
-                _msg['loc_y'] = rl[1]
-                _msg['human_id'] = self.convert_hid(rl[2])
-                _msg['human_comfort'] = rl[3] if len(rl) > 3 else 0
-                _msg['confident'] = rl[4] if len(rl) > 4 else -1
-                msgList.append(copy.deepcopy(_msg))
-        _df = pd.DataFrame(msgList)
-        self.df = pd.concat([self.df, _df], ignore_index=True)
-        self.df.reset_index()
-        # drop duplication
-        #self.df[~self.df.duplicated(['human_id', 'timestamp'], keep=False)]
-        self.df[['serverTime']] = self.df[['serverTime']].apply(pd.to_datetime)
+                if len(rl) >= 3:
+                    logging.debug('Msg RL: {}'.format(rl))
+                    _msg['loc_x'] = rl[0]
+                    _msg['loc_y'] = rl[1]
+                    _msg['human_id'] = self.convert_hid(rl[2])
+                    _msg['human_comfort'] = rl[3] if len(rl) > 3 else 0
+                    _msg['confident'] = rl[4] if len(rl) > 4 else -1
+                    msgList.append(copy.deepcopy(_msg))
+        if len(msgList) > 0:
+            _df = pd.DataFrame(msgList)
+            self.df = pd.concat([self.df, _df], ignore_index=True)
+            self.df.reset_index()
+            # drop duplication
+            #self.df[~self.df.duplicated(['human_id', 'timestamp'], keep=False)]
+            self.df[['serverTime']] = self.df[['serverTime']].apply(pd.to_datetime)
 
     def time_format_conversion (self, dTime):
         _time = dTime.astype(dt.datetime)
