@@ -286,7 +286,7 @@ class BackendServer (PluginModule):
                     'fvList' : []
                 }
             else:
-                logging.debug(current_time)
+                #logging.debug(current_time)
                 pass
             time.sleep(60)
 
