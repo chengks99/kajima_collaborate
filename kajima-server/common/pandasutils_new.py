@@ -39,6 +39,7 @@ class PandasUtils(object):
 
     def convert_hid (self, hid):
         print ('Converting human ID of : {}'.format(hid))
+        if hid is None: return None
         if 'unknown' == hid.lower():
             return 99999999
         elif 'unk' in hid.lower():
@@ -46,8 +47,12 @@ class PandasUtils(object):
         else:
             return int(hid.zfill(9))
 
-    # {'timestamp': datetime.datetime(2024, 1, 25, 13, 57, 54, 217497), 'result': [{'list': [[1430.9375429963172, 2246.3622394634376, 'Unk_880', '-0.4'], [1410.4723962467556, 2111.5012885288206, 'Unk_1245', '-0.78']], 'timestamp': datetime.datetime(2024, 1, 25, 13, 57, 54, 216319)}], 'pcid': 7000}
+    def __none_in_dict (self, msg):
+        for _, val in msg.items():
+            if val is None: return True
+        return False
 
+    # {'timestamp': datetime.datetime(2024, 1, 25, 13, 57, 54, 217497), 'result': [{'list': [[1430.9375429963172, 2246.3622394634376, 'Unk_880', '-0.4'], [1410.4723962467556, 2111.5012885288206, 'Unk_1245', '-0.78']], 'timestamp': datetime.datetime(2024, 1, 25, 13, 57, 54, 216319)}], 'pcid': 7000}
     def insert (self, adtype, msg):
         msgList = []
         _msg = {
@@ -58,6 +63,7 @@ class PandasUtils(object):
         for res in msg.get('result', []):
             _msg['timestamp'] = res['timestamp']
             for rl in res.get('list', []):
+                print (rl)
                 if len(rl) >= 3:
                     logging.debug('Msg RL: {}'.format(rl))
                     _msg['loc_x'] = rl[0]
@@ -65,7 +71,8 @@ class PandasUtils(object):
                     _msg['human_id'] = self.convert_hid(rl[2])
                     _msg['human_comfort'] = rl[3] if len(rl) > 3 else 0
                     _msg['confident'] = rl[4] if len(rl) > 4 else -1
-                    msgList.append(copy.deepcopy(_msg))
+                    if not self.__none_in_dict(_msg):
+                        msgList.append(copy.deepcopy(_msg))
         if len(msgList) > 0:
             _df = pd.DataFrame(msgList)
             self.df = pd.concat([self.df, _df], ignore_index=True)
