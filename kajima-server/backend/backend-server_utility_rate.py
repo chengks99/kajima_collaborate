@@ -17,6 +17,7 @@ import datetime as dt
 import fnmatch
 import configparser
 import numpy as np
+import requests
 import json
 import base64
 import hashlib
@@ -321,7 +322,7 @@ class BackendServer (PluginModule):
         elif fnmatch.fnmatch(ch, 'audio.*.result'):
             self.update_audio_result('.'.join(ch.split('.')[1:-1]), msg)
         elif fnmatch.fnmatch(ch, 'face.*.extraction'):
-            self.update_face_feature(msg)
+            self.update_face_extraction(msg)
         # elif fnmatch.fnmatch(ch, 'dome.*.query'):
         #     self.response_dome_query('.'.join(ch.split('.')[1:-1]), msg)
         elif fnmatch.fnmatch(ch, '*.body.notify'):
@@ -563,6 +564,21 @@ class BackendServer (PluginModule):
             return 777000
         else:
             return eIDList[-1] + 1
+        
+    def req_http (self, url, data, header=None):
+        try:
+            if header is None:
+                r = requests.post(url, data=data)
+            else:
+                r =requests.post(url, headers=header, data=data)
+            r.raise_for_status()
+            return (json.loads(r.text))
+        except requests.exceptions.HTTPError as e:
+            logging.error(e.response.text)
+            return None
+        except requests.exceptions.ConnectionError as e:
+            logging.error('Failed to establish a new connection')
+            return None
 
     #  update face features into database
     def update_face_feature (self, msg):
@@ -576,10 +592,18 @@ class BackendServer (PluginModule):
                 encryptedID = self.__get_encrypted_id()
                 _query = 'INSERT INTO face_db (name, features, race, age, gender, eID) VALUES (%s, %s, %s, %s, %s, %s)'
                 val = (fv['name'], fv['features'], fv['race'], fv['age'], fv['gender'], encryptedID)
+                r = self.req_http(
+                    'http://<IP>/data/add-human-data',
+                    {'gender': fv['gender'], 'ageGroup': fv['age'], 'humanID': encryptedID, 'race': fv['race']}
+                )
             else:
                 encryptedID = cur[0]['eID']
                 _query = """UPDATE face_db SET features = %s age = %s WHERE eID = %s"""
                 val = (fv['features'], fv['age'], encryptedID)
+                r = self.req_http(
+                    'http://<IP>/data/update-human-data',
+                    {'gender': fv['gender'], 'ageGroup': fv['age'], 'humanID': encryptedID, 'race': fv['race']}
+                )
             self.init_db.execute(_query, data=val, commit=False)
 
             '''
@@ -623,7 +647,7 @@ class BackendServer (PluginModule):
                 logging.debug("Updated body features for {}".format(data['human_id']))
             self.init_db.commit()
     
-    def update_face_feature (self, msg):
+    def update_face_extraction (self, msg):
         _Ffv =[]
         if not msg is None:
             _faceFV = msg.get('fvList', [])
