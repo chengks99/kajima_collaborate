@@ -239,6 +239,23 @@ class BackendServer (PluginModule):
             self.redis_conn.set('person.face.features', json2str({'fvList': _details}))
             self.redis_conn.publish('person.face.updates', json2str({'fvList': _details}))
         logging.debug("Loaded face features {}".format(_details[0]))
+
+    def load_body_features (self):
+        _query = "SELECT * FROM body_table"
+        _details = []
+        if not self.init_db is None:
+            cur = self.init_db.query(_query)
+            for c in cur:
+                _details.append({
+                    'name': c[1],
+                    'features': c[2],
+                    'person_deailts': c[3],
+                })
+            self.redis_conn.set('person.body.updates', json2str({'fvList': _details}))
+            self.redis_conn.publish('person.body.updates', json2str({'fvList': _details}))
+        logging.debug('Loaded body features {}'.format(_details[0]))
+       
+
     # start backend server
     def start (self, **extra_kw):
         self.load_system_configuration(self.args.cfg)
@@ -248,8 +265,7 @@ class BackendServer (PluginModule):
         _skip = extra_kw.get('skip_sql', False)
         self.init_sql(skip=_skip)
         self.load_face_features()
-        # self.load_body_features()
-        
+        self.load_body_features()        
 
         PluginModule.__init__(self,
             redis_conn=self.redis_conn, db=self.db
