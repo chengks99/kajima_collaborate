@@ -248,10 +248,9 @@ class BackendServer (PluginModule):
             for c in cur:
                 _details.append({
                     'name': c[1],
-                    'features': c[2],
-                    'person_deailts': c[3],
+                    'features': self.loading_bytes(c[2]),
                 })
-            self.redis_conn.set('person.body.updates', json2str({'fvList': _details}))
+            self.redis_conn.set('person.body.features', json2str({'fvList': _details}))
             self.redis_conn.publish('person.body.updates', json2str({'fvList': _details}))
         logging.debug('Loaded body features size: {}'.format(len(_details)))
        
