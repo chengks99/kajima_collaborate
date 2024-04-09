@@ -251,10 +251,9 @@ class BackendServer (PluginModule):
                     'features': c[2],
                     'person_deailts': c[3],
                 })
-            print (_details)
             self.redis_conn.set('person.body.updates', json2str({'fvList': _details}))
             self.redis_conn.publish('person.body.updates', json2str({'fvList': _details}))
-        logging.debug('Loaded body features {}'.format(_details))
+        logging.debug('Loaded body features size: {}'.format(len(_details)))
        
 
     # start backend server
