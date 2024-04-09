@@ -238,7 +238,7 @@ class BackendServer (PluginModule):
                 })
             self.redis_conn.set('person.face.features', json2str({'fvList': _details}))
             self.redis_conn.publish('person.face.updates', json2str({'fvList': _details}))
-        logging.debug("Loaded face features {}".format(_details[0]))
+        logging.debug("Loaded face features size: {}".format(len(_details)))
 
     def load_body_features (self):
         _query = "SELECT * FROM body_table"
@@ -254,7 +254,7 @@ class BackendServer (PluginModule):
             print (_details)
             self.redis_conn.set('person.body.updates', json2str({'fvList': _details}))
             self.redis_conn.publish('person.body.updates', json2str({'fvList': _details}))
-        logging.debug('Loaded body features {}'.format(_details[0]))
+        logging.debug('Loaded body features {}'.format(_details))
        
 
     # start backend server
