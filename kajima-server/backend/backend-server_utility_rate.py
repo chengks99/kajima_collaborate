@@ -258,6 +258,7 @@ class BackendServer (PluginModule):
     # start backend server
     def start (self, **extra_kw):
         self.load_system_configuration(self.args.cfg)
+        logging.info(self.args.cam)
         self.load_camera_configuration(self.args.cam)
         self.load_audio_configuration(self.args.aud)
         

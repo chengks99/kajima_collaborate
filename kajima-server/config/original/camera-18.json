@@ -1,6 +1,6 @@
 {
     "model_path": {
-        "pd_model" : "./storage/models/yolox/yolox_lcpset7miapALLFilAugFPAugft1024e180DAch30geare20.pth",
+        "pd_model" : "./storage/models/yolox/cpset7miapFilAugFP_cps4e180_DA_e14.pth",
         "pr_model" : "./storage/models/yolox/Body/model_mem_test_jk",
         "kp_model" : "./storage/models/yolox/retrain_keypoint.pth.tar",
         "kp_cfg" : "./storage/models/yolox/256x192_d256x3_adam_lr1e-3.yaml",
@@ -12,18 +12,16 @@
         "device" : 0,
         "pd_det_threshold" : 0.5,
         "pd_nms_threshold" : 0.45,
-        "pd_input_resize" : 1600,
+        "pd_input_resize" : 800,
         "max_detected_person" : 0,
         "min_person_width" : 70,
         "pr_threshold" : 0.5,
-        "body_database" : "./storage/lookup/database_dome_body_front_only_personal.pkl"
+        "body_database" : "./CommonDB/database_dome_body_front_only_personal.pkl"
     },
     "pmv_model_info": {
         "air_speed" : 0.1,
         "room_temp" : 22.6,
         "radiant_temp" : 22.6,
         "rel_humidity" : 57.8
-    },
-    "cam_roi" : [1376,432,920,1056,692,2024,1188,2264,1796,1544,2076,556],
-    "loc_roi" : [3534, 2596, 4252, 2596, 4268, 2640, 4364, 2640, 4364, 2840, 3534, 2840] 
+    }   
 }

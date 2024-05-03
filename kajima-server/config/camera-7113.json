@@ -1,6 +1,6 @@
 {
     "model_path": {
-        "pd_model" : "./storage/models/yolox/cpset8_pa150dyn1024_e20_ckpt_9636.pth",
+        "pd_model" : "./storage/models/yolox/yolox_lcpset7miapALLFilAugFPAugft1024e180DAch30geare20.pth",
         "pr_model" : "./storage/models/yolox/Body/model_mem_test_jk",
         "kp_model" : "./storage/models/yolox/retrain_keypoint.pth.tar",
         "kp_cfg" : "./storage/models/yolox/256x192_d256x3_adam_lr1e-3.yaml",
@@ -16,7 +16,7 @@
         "max_detected_person" : 0,
         "min_person_width" : 70,
         "pr_threshold" : 0.5,
-        "body_database" : "./CommonDB/database_dome_body_front_only_personal.pkl"
+        "body_database" : "./storage/lookup/database_dome_body_front_only_personal.pkl"
     },
     "pmv_model_info": {
         "air_speed" : 0.1,
@@ -24,5 +24,7 @@
         "radiant_temp" : 22.6,
         "rel_humidity" : 57.8
     }, 
-    "cam_roi" : [776,1048,644,1560,588,1924,1272,2340,1756,2388,2396,2024,2496,1116,1792,868]
+    "cam_roi" : [776,1048,644,1560,588,1924,1272,2340,1756,2388,2396,2024,2496,1116,1792,868],
+    "loc_roi" : [4364, 2632, 4448, 2632, 4448, 2560, 4628, 2560, 4639, 2280, 4740, 2280, 4740, 2560, 4910, 2560, 4910, 2686, 4712, 2686, 4716, 2840, 4448, 2840, 4364, 2840]
+
 }

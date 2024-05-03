@@ -1,6 +1,6 @@
 {
     "model_path": {
-        "pd_model": "./models/yolox_lcpset7miapALLFilAugFPAugft1024e180DAch30geare20.pth",
+        "pd_model": "./models/yolox_l_person_aug.pth",
         "pr_model": "./models/Body/model_mem_test_jk",
         "fr_model": "./models/Face/r100_glint360K_mxnet_fc_01/model",
         "kp_model": "./models/pose_resnet_50_256x192.pth.tar",

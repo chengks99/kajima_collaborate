@@ -152,7 +152,7 @@ class HTTPDataIntegration(PluginModule):
                 #if not dl == '78681': continue
                 self._get_measurements(source=dl)
             self.redis_conn.publish('http.data.int', json2str({'data': self.deviceList, 'timestamp': dt.datetime.now()}))
-            time.sleep(self.details.get('interval', 15) * 60)
+            time.sleep(self.details.get('interval', 0.5) * 60)
             #time.sleep(10)
             if self.th_quit.is_set():
                 break
