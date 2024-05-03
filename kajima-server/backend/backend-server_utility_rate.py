@@ -31,7 +31,7 @@ import argsutils as au
 from jsonutils import json2str,str2json
 from plugin_module import PluginModule
 from pandasutils_new import PandasUtils
-
+from humanAPI import HumanAPI
 
 class NumpyArrayEncoder(JSONEncoder):
     def default(self, obj):
@@ -262,7 +262,6 @@ class BackendServer (PluginModule):
         self.load_camera_configuration(self.args.cam)
         self.load_audio_configuration(self.args.aud)
         self.load_human_api()
-        exit(1)
         
         _skip = extra_kw.get('skip_sql', False)
         self.init_sql(skip=_skip)
@@ -287,8 +286,13 @@ class BackendServer (PluginModule):
     
     def load_human_api (self):
         args = au.to_namespace(self.cfg)
-        
-
+        dets = {
+            'ip': args.humip,
+            'port': int(args.humport),
+            'username': args.humusr,
+            'password': args.humpwd,
+        }
+        self.humAPI = HumanAPI(dets)
     
     def reset_body(self):
         # Timer
@@ -617,18 +621,12 @@ class BackendServer (PluginModule):
                 encryptedID = self.__get_encrypted_id()
                 _query = 'INSERT INTO face_db (name, features, race, age, gender, eID) VALUES (%s, %s, %s, %s, %s, %s)'
                 val = (fv['name'], fv['features'], fv['race'], fv['age'], fv['gender'], encryptedID)
-                r = self.req_http(
-                    'http://<IP>/data/add-human-data',
-                    {'gender': fv['gender'], 'ageGroup': fv['age'], 'humanID': encryptedID, 'race': fv['race']}
-                )
+                self.humAPI.add_human_data({'gender': fv['gender'], 'ageGroup': fv['age'], 'humanID': encryptedID, 'race': fv['race']})
             else:
                 encryptedID = cur[0]['eID']
                 _query = """UPDATE face_db SET features = %s age = %s WHERE eID = %s"""
                 val = (fv['features'], fv['age'], encryptedID)
-                r = self.req_http(
-                    'http://<IP>/data/update-human-data',
-                    {'gender': fv['gender'], 'ageGroup': fv['age'], 'humanID': encryptedID, 'race': fv['race']}
-                )
+                self.humAPI.update_human_data({'gender': fv['gender'], 'ageGroup': fv['age'], 'humanID': encryptedID, 'race': fv['race']})
             self.init_db.execute(_query, data=val, commit=False)
 
             '''
