@@ -230,6 +230,8 @@ class Camera(Adaptor):
             print('Empty body features')
             # body_details = {'fvList': []}
             body_details = None
+        else:
+            logging.debug('Got body features length: {}'.format(len(body_details.get('fvList', []))))
         self.process_engine(body_details)
         self.process_localization()
         self.process_stream()
@@ -253,7 +255,7 @@ class Camera(Adaptor):
 
     # initialize detection engine
     def process_engine (self,body_details):
-        self.cur_engine = DetectionEngine(self.cfg,body_details)
+        self.cur_engine = DetectionEngine(self.cfg, body_details)
         logging.debug('Detection Engine module initialized...')
 
     # initialize camera stream

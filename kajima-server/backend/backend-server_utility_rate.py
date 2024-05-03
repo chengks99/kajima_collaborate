@@ -261,6 +261,8 @@ class BackendServer (PluginModule):
         logging.info(self.args.cam)
         self.load_camera_configuration(self.args.cam)
         self.load_audio_configuration(self.args.aud)
+        self.load_human_api()
+        exit(1)
         
         _skip = extra_kw.get('skip_sql', False)
         self.init_sql(skip=_skip)
@@ -280,6 +282,13 @@ class BackendServer (PluginModule):
         self.start_thread('housekeep', self.housekeep)
         self.save_info()
         self.start_thread('reset_body', self.reset_body)
+
+
+    
+    def load_human_api (self):
+        args = au.to_namespace(self.cfg)
+        
+
     
     def reset_body(self):
         # Timer
