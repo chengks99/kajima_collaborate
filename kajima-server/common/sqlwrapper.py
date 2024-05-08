@@ -47,7 +47,6 @@ class SQLDatabase(object):
         self.db.close()
     
     def execute (self, msg, data=None, commit=False):
-        #print ('*************************')
         #logging.debug('Execute Database: {}. Commit={}'.format(msg.split(' ')[0], commit))
         if not self.connection():
             logging.error('SQL not connected, Reconnecting')

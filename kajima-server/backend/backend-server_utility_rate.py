@@ -153,7 +153,6 @@ class BackendServer (PluginModule):
                     if _fpath.is_file():
                         with open(str(_fpath)) as _cfgf:
                             self.aud[section]['config'] = json.load(_cfgf)
-                print ('audio.{}.config'.format(section), json2str(self.aud[section]))
                 self.redis_conn.set('audio.{}.config'.format(section), json2str(self.aud[section]))
         else:
             logging.error('Unable to read audio configuration file')

@@ -38,7 +38,7 @@ class PandasUtils(object):
         return ehid
 
     def convert_hid (self, hid):
-        print ('Converting human ID of : {}'.format(hid))
+        #print ('Converting human ID of : {}'.format(hid))
         if hid is None: return None
         if 'unknown' == hid.lower():
             return 99999999
@@ -63,7 +63,7 @@ class PandasUtils(object):
         for res in msg.get('result', []):
             _msg['timestamp'] = res['timestamp']
             for rl in res.get('list', []):
-                print (rl)
+                #print (rl)
                 if len(rl) >= 3:
                     logging.debug('Msg RL: {}'.format(rl))
                     _msg['loc_x'] = rl[0]
@@ -134,6 +134,8 @@ class PandasUtils(object):
 
                     # request MQTT forwarding
                     _data['time'] = int(_utcTime.timestamp())
+                    #print ('***************')
+                    #print (_data)
                     self.redis_conn.publish(
                         'sql.changes.listener', 
                         json2str({
