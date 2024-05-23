@@ -291,6 +291,21 @@ class MQTTForwarding(PluginModule):
         #print (res)
         if not res is None:
             _res = json.loads(res)
+            if 'util_id' in _res:
+                mqtt_msg = {
+                    "PC_ID": '{0:06d}'.format(msg['pcid']),
+                    "Device_data": [
+                        {
+                            "Device_ID": '{0:06d}'.format(_res['util_id']),
+                            "Device_name": 'deviceID_rate',
+                            "Data_type": "string",
+                            "Value": '{}_{}'.format(_res['util_id'], _res['people_count']),
+                        }
+                    ],
+                    "Timestamp": int(_res['time']),
+                }
+                self.tt.publish(mqtt_msg)
+            
             if 'cam_id' in _res:
                 # _res['comfort'] = 0
                 # if DEBUG:
