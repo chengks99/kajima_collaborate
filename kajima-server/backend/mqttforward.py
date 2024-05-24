@@ -299,7 +299,7 @@ class MQTTForwarding(PluginModule):
                             "Device_ID": '{0:06d}'.format(_res['util_id']),
                             "Device_name": 'deviceID_rate',
                             "Data_type": "string",
-                            "Value": '{}_{}'.format(_res['util_id'], _res['people_count']),
+                            "Value": '{}_{}'.format(_res['util_id'], _res['util_rate']),
                         }
                     ],
                     "Timestamp": int(_res['time']),
