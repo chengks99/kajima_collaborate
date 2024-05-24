@@ -459,7 +459,7 @@ class BackendServer (PluginModule):
             data = {
                 'util_id': result['cam_id'],
                 'util_rate': result['people_count'],
-                'time': result['timestamp'],
+                'time': result['timestamp'].get('$dt', -1),
             }
             self.redis_conn.publish('sql.changes.listener', json2str({'id': result['cam_id'], 'pcid': int(result['pcid']), 'msg': json2str(data)}))
         
