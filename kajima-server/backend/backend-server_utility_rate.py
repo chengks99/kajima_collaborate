@@ -455,7 +455,7 @@ class BackendServer (PluginModule):
             self.utility.execute(_query,data = val, commit = True)
             logging.debug("Update detection for {}: count : {}, timestamp : {}".format(result['cam_id'],result['people_count'],result['timestamp'].strftime('%Y%m%d%H%M%S')))
             self.utility.commit()
-
+            print (result['timestamp'])
             data = {
                 'util_id': result['cam_id'],
                 'util_rate': result['people_count'],
