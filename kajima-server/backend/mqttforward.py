@@ -292,6 +292,7 @@ class MQTTForwarding(PluginModule):
         if not res is None:
             _res = json.loads(res)
             if 'util_id' in _res:
+                print ('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
                 print (_res['time'])
                 mqtt_msg = {
                     "PC_ID": '{0:06d}'.format(msg['pcid']),
